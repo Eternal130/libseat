@@ -31,7 +31,6 @@ jobs:
 
       - name: Package
         run: |
-          cp README.md LICENSE .
           zip -j libseat-windows-x64.zip libseat.exe README.md LICENSE
           sha256sum libseat.exe | tee sha256sum.txt
 
