@@ -1,0 +1,44 @@
+name: Build & Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build-windows:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install MinGW-w64
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends mingw-w64
+
+      - name: Build (static, no DLL dependencies)
+        run: |
+          x86_64-w64-mingw32-g++ -std=c++17 -O2 -municode -static \
+            -Wall -o libseat.exe libseat.cpp \
+            -lwinhttp -lbcrypt -lcrypt32
+
+      - name: Verify PE executable
+        run: file libseat.exe
+
+      - name: Package
+        run: |
+          cp README.md LICENSE .
+          zip -j libseat-windows-x64.zip libseat.exe README.md LICENSE
+          sha256sum libseat.exe | tee sha256sum.txt
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            libseat-windows-x64.zip
+            sha256sum.txt
+          generate_release_notes: true
